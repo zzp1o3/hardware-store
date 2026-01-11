@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, Text, StyleSheet } from 'react-native';
 import { ProductScreen } from '../screens/ProductScreen';
@@ -9,7 +9,16 @@ import { StatsScreen } from '../screens/StatsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { useCartStore } from '../store/cartStore';
 
-const Tab = createBottomTabNavigator();
+// 定义路由参数类型
+type RootTabParamList = {
+  Products: undefined;
+  Add: undefined;
+  Stats: undefined;
+  Settings: undefined;
+  Cart: undefined;
+};
+
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const ProductTabIcon: React.FC = () => (
   <View style={styles.iconContainer}>
@@ -56,12 +65,20 @@ const CartTabIcon: React.FC = () => {
   );
 };
 
+// 定义screenOptions的类型
+type ScreenOptionsProps = {
+  route: {
+    name: keyof RootTabParamList;
+  };
+  navigation: any;
+};
+
 export const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color }) => {
+        screenOptions={({ route }: ScreenOptionsProps) => ({
+          tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => {
             if (route.name === 'Cart') return <CartTabIcon />;
             if (route.name === 'Add') return <AddTabIcon />;
             if (route.name === 'Stats') return <StatsTabIcon />;

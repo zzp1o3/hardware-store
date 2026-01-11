@@ -15,6 +15,7 @@ import { useProductStore } from '../store/productStore';
 import { initDatabase } from '../database/init';
 import { ProductCard } from '../components/ProductCard';
 import { on, off } from '../utils/eventBus';
+import { Product } from '../types';
 
 export const ProductScreen: React.FC = () => {
   const { products, searchResults, isLoading, loadProducts, search, deleteProduct } = useProductStore();
@@ -80,7 +81,7 @@ export const ProductScreen: React.FC = () => {
         onChangeText={handleSearch}
       />
 
-      <FlatList
+      <FlatList<Product>
         data={displayProducts}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
