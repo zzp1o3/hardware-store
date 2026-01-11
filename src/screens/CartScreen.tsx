@@ -34,7 +34,11 @@ export const CartScreen: React.FC = () => {
             try {
               const itemsJson = JSON.stringify(items);
               const total = getTotalPrice();
-              const createdAt = new Date().toISOString();
+              
+              // 获取本地时间字符串，避免时区问题
+              const now = new Date();
+              const localDateStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+              const createdAt = localDateStr;
 
               await addOrder(itemsJson, total, createdAt);
 

@@ -23,21 +23,45 @@ export const PermissionTest: React.FC = () => {
     }
 
     try {
-      // 检查读取权限
-      const readGranted = await PermissionsAndroid.check(
-        Platform.Version >= 30 
-          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES 
-          : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-      );
-      setReadPermission(readGranted);
-
-      // 检查写入权限
-      const writeGranted = await PermissionsAndroid.check(
-        Platform.Version >= 30 
-          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES 
-          : PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-      );
-      setWritePermission(writeGranted);
+      // Android 11+ (API 30+) 使用新的权限模型
+      if (typeof Platform.Version === 'number' && Platform.Version >= 30) {
+        // Android 11+ 仍然需要请求权限
+        console.log('Android 11+，请求存储权限...');
+        const permissions = [
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+        ];
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        console.log('存储权限请求结果:', granted);
+        
+        const readGranted = granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED;
+        const writeGranted = granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED;
+        
+        setReadPermission(readGranted);
+        setWritePermission(writeGranted);
+      } else {
+        // Android 10 及以下版本检查传统权限
+        const readGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+        );
+        const writeGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+        );
+        
+        // 如果权限未授予，尝试请求权限
+        if (!readGranted || !writeGranted) {
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+          ]);
+          
+          setReadPermission(granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED);
+          setWritePermission(granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED);
+        } else {
+          setReadPermission(readGranted);
+          setWritePermission(writeGranted);
+        }
+      }
 
     } catch (err) {
       console.error('检查权限失败:', err);

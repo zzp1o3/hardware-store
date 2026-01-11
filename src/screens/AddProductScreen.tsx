@@ -15,11 +15,15 @@ export const AddProductScreen: React.FC = () => {
       return;
     }
 
+    // 获取本地时间字符串，避免时区问题
+    const now = new Date();
+    const localDateStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+
     await addProduct({
       name,
       price: parseFloat(price),
       location,
-      createdAt: new Date().toISOString(),
+      createdAt: localDateStr,
     });
 
     setName('');

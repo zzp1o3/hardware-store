@@ -2,7 +2,7 @@
   "expo": {
     "name": "新院东电料",
     "slug": "hardware-store",
-    "version": "1.0.0",
+    "version": "1.10.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -40,9 +40,6 @@
       "eas": {
         "projectId": "8e229ae5-0257-4835-a9d2-f942d6c95964"
       }
-    },
-    "cli": {
-      "appVersionSource": "remote"
     }
   }
 }

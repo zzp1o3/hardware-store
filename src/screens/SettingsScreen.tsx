@@ -163,8 +163,12 @@ export const SettingsScreen: React.FC = () => {
           name: prodName,
           price: Number(it.price) || 0,
           location: it.location || '',
-          createdAt: it.createdAt || new Date().toISOString(),
-        };
+          createdAt: it.createdAt || (() => {
+            // 获取本地时间字符串，避免时区问题
+            const now = new Date();
+            return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+          })(),
+          };
         await addProduct(product);
         added++;
       }
@@ -295,35 +299,85 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const ensureAndroidReadPermission = async () => {
-    if (Platform.OS !== 'android') return true;
     try {
       console.log('正在请求Android读取权限...');
-      // 对于Android 11及以上版本，使用新的权限模型
-      const permissions = Platform.Version >= 30 ? 
-        [PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] :
-        [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE];
       
+      // Android 13+ (API 33+) 使用新的媒体权限
+      if (typeof Platform.Version === 'number' && Platform.Version >= 33) {
+        console.log('Android 13+，请求媒体权限...');
+        const permissions = [
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO
+        ];
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        console.log('媒体权限请求结果:', granted);
+        
+        // 检查是否至少有一个权限被授予
+        const hasAnyPermission = Object.values(granted).some(status => status === PermissionsAndroid.RESULTS.GRANTED);
+        return hasAnyPermission;
+      }
+      
+      // Android 11-12 (API 30-32) 仍然需要请求权限
+      if (typeof Platform.Version === 'number' && Platform.Version >= 30) {
+        console.log('Android 11+，请求存储权限...');
+        // 对于 Android 11-12，请求传统权限
+        const permissions = [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE];
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        console.log('读取权限请求结果:', granted);
+        
+        const allGranted = Object.values(granted).every(status => status === PermissionsAndroid.RESULTS.GRANTED);
+        return allGranted;
+      }
+      
+      // Android 10 及以下版本请求传统权限
+      const permissions = [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE];
       const granted = await PermissionsAndroid.requestMultiple(permissions);
-      console.log('权限请求结果:', granted);
+      console.log('读取权限请求结果:', granted);
       
-      // 检查是否所有权限都被授予
       const allGranted = Object.values(granted).every(status => status === PermissionsAndroid.RESULTS.GRANTED);
       return allGranted;
     } catch (err: any) {
-      console.warn('请求权限失败', err);
+      console.warn('请求读取权限失败', err);
       return false;
     }
   };
 
   const ensureAndroidWritePermission = async () => {
-    if (Platform.OS !== 'android') return true;
     try {
       console.log('正在请求Android写入权限...');
-      // 对于Android 11及以上版本，使用新的权限模型
-      const permissions = Platform.Version >= 30 ? 
-        [PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] :
-        [PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE];
       
+      // Android 13+ (API 33+) 使用新的媒体权限
+      if (typeof Platform.Version === 'number' && Platform.Version >= 33) {
+        console.log('Android 13+，请求媒体权限...');
+        const permissions = [
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO
+        ];
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        console.log('媒体权限请求结果:', granted);
+        
+        // 检查是否至少有一个权限被授予
+        const hasAnyPermission = Object.values(granted).some(status => status === PermissionsAndroid.RESULTS.GRANTED);
+        return hasAnyPermission;
+      }
+      
+      // Android 11-12 (API 30-32) 仍然需要请求权限
+      if (typeof Platform.Version === 'number' && Platform.Version >= 30) {
+        console.log('Android 11+，请求存储权限...');
+        // 对于 Android 11-12，请求传统权限
+        const permissions = [PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE];
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        console.log('写入权限请求结果:', granted);
+        
+        // 检查是否所有权限都被授予
+        const allGranted = Object.values(granted).every(status => status === PermissionsAndroid.RESULTS.GRANTED);
+        return allGranted;
+      }
+      
+      // Android 10 及以下版本请求传统权限
+      const permissions = [PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE];
       const granted = await PermissionsAndroid.requestMultiple(permissions);
       console.log('写入权限请求结果:', granted);
       
@@ -358,7 +412,8 @@ export const SettingsScreen: React.FC = () => {
       try {
         res = await DocumentPicker.getDocumentAsync({ 
           type: 'application/json', 
-          copyToCacheDirectory: true 
+          copyToCacheDirectory: true,
+          multiple: false
         });
       } catch (pickerError: any) {
         console.error('文件选择器错误:', pickerError);
@@ -434,7 +489,11 @@ export const SettingsScreen: React.FC = () => {
             name: prodName,
             price: Number(it.price) || 0,
             location: it.location || '',
-            createdAt: it.createdAt || new Date().toISOString(),
+            createdAt: it.createdAt || (() => {
+              // 获取本地时间字符串，避免时区问题
+              const now = new Date();
+              return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString();
+            })(),
           };
           
           await addProduct(product);

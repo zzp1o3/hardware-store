@@ -64,18 +64,32 @@ export const addOrder = async (itemsJson: string, totalAmount: number, createdAt
 
 // 获取今天的所有订单（按 createdAt）
 export const getTodayOrders = async () => {
+  const now = new Date();
+  // 获取本地日期字符串（YYYY-MM-DD格式）
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  
   const results = await db.getAllAsync(
-    "SELECT * FROM orders WHERE DATE(createdAt) = DATE('now') ORDER BY createdAt DESC",
-    []
+    'SELECT * FROM orders WHERE DATE(createdAt) = DATE(?) ORDER BY createdAt DESC',
+    [todayStr]
   );
   return results;
 };
 
 // 获取今天的汇总：总金额与订单数量
 export const getTodaySummary = async () => {
+  const now = new Date();
+  // 获取本地日期字符串（YYYY-MM-DD格式）
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  
   const rows = await db.getAllAsync<{ total: number; count: number }>(
-    "SELECT IFNULL(SUM(totalAmount), 0) as total, COUNT(*) as count FROM orders WHERE DATE(createdAt) = DATE('now')",
-    []
+    'SELECT IFNULL(SUM(totalAmount), 0) as total, COUNT(*) as count FROM orders WHERE DATE(createdAt) = DATE(?)',
+    [todayStr]
   );
   return rows && rows[0] ? { total: rows[0].total ?? 0, count: rows[0].count ?? 0 } : { total: 0, count: 0 };
 };
