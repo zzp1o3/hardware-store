@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { Product } from '../types';
 import { searchProducts, getAllProducts, addProduct, deleteProduct } from '../database/queries';
+<<<<<<< HEAD
 import { emit } from '../utils/eventBus';
+=======
+>>>>>>> 2d0c13b0a56d9f815b6a4fbc3e2d799a303445d8
 
 interface ProductStore {
   products: Product[];
@@ -38,12 +41,18 @@ export const useProductStore = create<ProductStore>((set, get) => ({
   addProduct: async (product) => {
     await addProduct(product);
     await get().loadProducts();
+<<<<<<< HEAD
     emit('productsUpdated'); // 通知商品页面刷新
+=======
+>>>>>>> 2d0c13b0a56d9f815b6a4fbc3e2d799a303445d8
   },
 
   deleteProduct: async (id) => {
     await deleteProduct(id);
     await get().loadProducts();
+<<<<<<< HEAD
     emit('productsUpdated'); // 通知商品页面刷新
+=======
+>>>>>>> 2d0c13b0a56d9f815b6a4fbc3e2d799a303445d8
   },
 }));
