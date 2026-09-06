@@ -118,7 +118,7 @@ SQLite 数据库文件：`hardware.db`（应用沙盒内），包含两张表：
 项目已配置 **EAS Build** 与 **GitHub Actions** 自动构建：
 
 - `eas.json` 定义了三个构建档位：`development`（开发客户端）、`preview`（Android APK）、`production`（Android AAB）。
-- `.github/workflows/eas-build.yml`：推送到 `main` 分支或手动触发时，自动执行 `eas build -p android --profile preview` 并上传构建产物（Artifact 保留 7 天）。
+- `.github/workflows/eas-build.yml`：推送到 `main` 分支或手动触发时，自动执行 `eas build -p android --profile preview`，构建完成后从 EAS 下载 APK，并自动创建 GitHub Release 附带 APK（tag 格式为 `v<版本号>-build.<构建编号>`，如 `v1.10.0-build.35`），同时上传构建产物（Artifact 保留 7 天）。
 
 手动构建：
 

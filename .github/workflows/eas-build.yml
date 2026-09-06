@@ -5,6 +5,10 @@ on:
     branches:
       - main
       - master
+
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build APK
@@ -32,12 +36,42 @@ jobs:
       - name: Build APK
         run: eas build -p android --profile preview --non-interactive
 
+      - name: Get APK download URL
+        id: apk-url
+        run: |
+          url=$(eas build:list --platform android --limit 1 --status finished --json | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$url" ] || [ "$url" = "null" ]; then
+            echo "::error::未能从 EAS 获取 APK 下载地址"
+            exit 1
+          fi
+          echo "APK URL: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Download APK
+        env:
+          APK_URL: ${{ steps.apk-url.outputs.url }}
+        run: |
+          curl --fail --location --silent --show-error --retry 3 -o app-release.apk "$APK_URL"
+          ls -lh app-release.apk
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          version=$(jq -r '.expo.version // "0.0.0"' app.json)
+          echo "tag=v${version}-build.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: build-artifacts
-          path: |
-            *.apk
-            *.aab
+          name: app-release.apk
+          path: app-release.apk
           retention-days: 7
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          files: app-release.apk
+          generate_release_notes: true
+          fail_on_unmatched_files: true
